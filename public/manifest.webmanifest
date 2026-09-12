@@ -1,0 +1,10 @@
+{
+  "name": "OnionGrade",
+  "short_name": "OnionGrade",
+  "description": "Transparent onion quality assessment and fair-value reports.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f0f0ef",
+  "theme_color": "#202124",
+  "icons": [{ "src": "/oniongrade-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
