@@ -8,7 +8,7 @@ export interface QualityMetrics {
   rotten: number
   sprouted: number
   undersized: number
-  avgSize: number
+  avgSize: string
   appearance: number
   confidence: number
 }
@@ -37,4 +37,5 @@ export interface LotAssessment {
   metrics: QualityMetrics
   pricing: PricingEstimate
   isGuest?: boolean
+  images?: string[]
 }

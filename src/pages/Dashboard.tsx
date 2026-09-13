@@ -257,8 +257,8 @@ export function Dashboard() {
             </Link>
           </div>
 
-          {reports.slice(0, 3).map((report) => (
-            <Link className="report-row" key={report.id} to={`/reports/${report.id}`}>
+          {reports.slice(0, 3).map((report, index) => (
+            <Link className="report-row" key={`${report.id}-${index}`} to={`/reports/${report.id}`}>
               <span className="lot-thumb" data-reveal-tier="4">
                 <Basket size={18} weight="fill" />
               </span>

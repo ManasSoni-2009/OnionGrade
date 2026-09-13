@@ -51,8 +51,8 @@ export function Reports() {
       </div>
 
       <section className="reports-list">
-        {filtered.map((report) => (
-          <ReportItem key={report.id} report={report} />
+        {filtered.map((report, index) => (
+          <ReportItem key={`${report.id}-${index}`} report={report} />
         ))}
       </section>
     </div>

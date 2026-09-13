@@ -380,4 +380,75 @@ body{background:#eeeeec}
 /* Focus visible ring for accessibility */
 .button:focus-visible,.icon-button:focus-visible,a:focus-visible{outline:2px solid var(--lime);outline-offset:2px;border-radius:12px}
 
+/* ======================================================================
+   AI CHATBOX FAST & BEAUTIFUL ANIMATIONS
+   ====================================================================== */
+.chatbox-panel-enter {
+  animation: chatboxEnter 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+@keyframes chatboxEnter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.chat-msg-user {
+  animation: chatMsgUserIn 0.22s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+@keyframes chatMsgUserIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.chat-msg-ai {
+  animation: chatMsgAiIn 0.26s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+@keyframes chatMsgAiIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.chat-prompt-chip {
+  transition: transform 0.18s cubic-bezier(0.2, 0.9, 0.3, 1), border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+.chat-prompt-chip:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+.chat-prompt-chip:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.shimmer-text {
+  background: linear-gradient(90deg, #d6cdfa 0%, #ffffff 50%, #d6cdfa 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmerMove 1.8s linear infinite;
+}
+@keyframes shimmerMove {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 @media print{body,html,#root{height:auto!important;min-height:auto!important;max-height:none!important;overflow:visible!important;position:static!important}@page { margin: 0.5cm; } .sidebar,.topbar,.mobile-nav,.page-heading,.report-actions,.toast{display:none!important}.app-shell,.app-main,.page{padding:0!important;display:block!important;overflow:visible!important;height:auto!important;min-height:auto!important;max-height:none!important;position:static!important}.app-shell{background:#fff!important;box-shadow:none!important;border:none!important;margin:0!important;width:100%!important}.report-hero,.narrative-card{print-color-adjust:exact;-webkit-print-color-adjust:exact}.report-hero{padding:12px 16px!important}.page{max-width:none!important}.report-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:12px!important}.quality-breakdown,.price-card,.inspection-card,.narrative-card,.scanned-images-card{padding:12px 16px!important;border:1px solid #ddd;page-break-inside:avoid;margin:0!important}.scanned-images-card{grid-column:span 2!important;margin-top:0!important}.scanned-images-grid{margin-top:10px!important;gap:8px!important}.ai-advisory-card{page-break-before:always!important;break-before:page!important;margin-top:0!important;border:1px solid #ddd;box-shadow:none!important}}
