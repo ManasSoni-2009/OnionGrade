@@ -18,28 +18,61 @@ interface AppState {
   clearReports: () => void
 }
 
+function dedupeReports(reports: LotAssessment[]): LotAssessment[] {
+  const seen = new Set<string>()
+  const result: LotAssessment[] = []
+  for (const r of reports) {
+    if (r && r.id && !seen.has(r.id)) {
+      seen.add(r.id)
+      result.push(r)
+    }
+  }
+  return result
+}
+
 export const useStore = create<AppState>()(
   persist(
     (set) => ({
-      reports: seededReports(),
+      reports: dedupeReports(seededReports()),
       profile: '',
       toast: null,
 
-      addReport: (report) => set((state) => ({ reports: [{ ...report, isGuest: !state.profile }, ...state.reports] })),
-      setProfile: (name) => set((state) => ({
-        profile: name,
-        reports: state.reports.map(r => ({ ...r, isGuest: false }))
-      })),
+      addReport: (report) =>
+        set((state) => {
+          const item = { ...report, isGuest: !state.profile }
+          const existingIndex = state.reports.findIndex((r) => r.id === report.id)
+          if (existingIndex >= 0) {
+            const next = [...state.reports]
+            next[existingIndex] = item
+            return { reports: dedupeReports(next) }
+          }
+          return { reports: dedupeReports([item, ...state.reports]) }
+        }),
+      setProfile: (name) =>
+        set((state) => ({
+          profile: name,
+          reports: state.reports.map((r) => ({ ...r, isGuest: false })),
+        })),
       logout: () => set({ profile: '' }),
       notify: (message, kind = 'success') => {
         set({ toast: { message, kind } })
         setTimeout(() => set({ toast: null }), 3200)
       },
-      clearReports: () => set({ reports: seededReports() })
+      clearReports: () => set({ reports: dedupeReports(seededReports()) }),
     }),
     {
       name: 'oniongrade-storage',
-      partialize: (state) => ({ reports: state.reports, profile: state.profile }), // Only persist reports and profile
+      partialize: (state) => ({ reports: state.reports, profile: state.profile }),
+      merge: (persistedState: any, currentState: AppState): AppState => {
+        const rawReports = Array.isArray(persistedState?.reports)
+          ? (persistedState.reports as LotAssessment[])
+          : currentState.reports
+        return {
+          ...currentState,
+          ...persistedState,
+          reports: dedupeReports(rawReports),
+        }
+      },
     }
   )
 )

@@ -44,6 +44,44 @@ async function computeFileHash(file: File): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// Resize image client-side to save localStorage space
+async function resizeImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 600;
+        const MAX_HEIGHT = 600;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.6));
+      };
+      img.onerror = reject;
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export function Capture() {
   const navigate = useNavigate()
   const draft = useMemo(() => {
@@ -85,15 +123,20 @@ export function Capture() {
         continue;
       }
       
-      newHashes.add(hash);
-      newImages.push({ id: `${Date.now()}-${i}`, name: file.name, file }); // Store file obj to send to backend
-      addedCount++;
+      try {
+        const previewUrl = await resizeImage(file);
+        newHashes.add(hash);
+        newImages.push({ id: `${Date.now()}-${i}`, name: file.name, file, preview: previewUrl });
+        addedCount++;
+      } catch (err) {
+        console.error("Failed to resize image", err);
+      }
     }
 
     if (newImages.length > 0) {
       setImages((prev) => [...prev, ...newImages])
       setUploadedHashes(newHashes)
-      if (!error || error.includes('rejected')) setError('') // Clear error if successful uploads happened
+      if (!error || error.includes('rejected')) setError('')
     }
     setShowUpload(false)
   }
@@ -110,6 +153,7 @@ export function Capture() {
       return
     }
     draft.imageCount = images.length
+    draft.images = images.map(img => img.preview).filter(Boolean) as string[]
     sessionStorage.setItem('oniongrade-draft', JSON.stringify(draft))
     navigate('/analyzing')
   }
@@ -224,10 +268,31 @@ export function Capture() {
                     setImages((prev) => prev.filter((_, i) => i !== index))
                   }
                   title={`Remove ${images[index].name}`}
+                  style={{
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}
                 >
-                  <Basket size={20} weight="fill" />
-                  <span>{index + 1}</span>
-                  <X size={13} weight="bold" />
+                  {images[index].preview ? (
+                    <img
+                      src={images[index].preview}
+                      alt={images[index].name}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        zIndex: 0,
+                        opacity: 0.8
+                      }}
+                    />
+                  ) : (
+                    <Basket size={20} weight="fill" style={{ zIndex: 1, position: 'relative' }} />
+                  )}
+                  <span style={{ zIndex: 1, position: 'relative' }}>{index + 1}</span>
+                  <X size={13} weight="bold" style={{ zIndex: 1, position: 'relative' }} />
                 </button>
               ) : (
                 <div key={index} className="capture-placeholder">

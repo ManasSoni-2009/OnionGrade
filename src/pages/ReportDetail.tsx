@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, Navigate, Link } from 'react-router-dom'
 import {
   SealCheck,
@@ -40,34 +40,9 @@ export function ReportDetail() {
   const notify = useStore(state => state.notify)
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const draft = useMemo(() => {
-    const saved = sessionStorage.getItem('oniongrade-draft')
-    return saved ? (JSON.parse(saved) as LotAssessment) : null
-  }, [])
-  const found = id === 'draft' ? draft : reports.find((r) => r.id === id)
+  const found = reports.find((r) => r.id === id)
   const [share, setShare] = useState(false)
   const ref = useReveal([id, found])
-
-  useEffect(() => {
-    if (id === 'draft' && draft) {
-      const final = createAssessment(
-        draft.weight,
-        draft.variety,
-        draft.region || regions[0],
-        draft.imageCount,
-        draft.imageCount * 17
-      )
-      final.id = draft.id
-      final.code = draft.code
-      sessionStorage.removeItem('oniongrade-draft')
-      navigate(`/reports/${final.id}`, { replace: true })
-      try {
-        useStore.getState().addReport(final)
-      } catch {
-        /* local storage is optional */
-      }
-    }
-  }, [id, draft, navigate])
 
   if (!found) {
     return <Navigate to="/reports" replace />
@@ -112,15 +87,15 @@ export function ReportDetail() {
             </span>
           )}
           <h2 data-reveal-tier="1">
-            Your lot is <em>{r.metrics.gradeA}% Grade A.</em>
+            Your lot is <em>{r.metrics?.gradeA || 0}% Grade A.</em>
           </h2>
           <p data-reveal-tier="3">
-            {r.variety} · {r.weight.toLocaleString('en-IN')} kg · {r.imageCount} images · {r.region.market}
+            {r.variety} · {r.weight?.toLocaleString('en-IN')} kg · {r.imageCount} images · {r.region?.market}
           </p>
         </div>
         <div className="overall-score">
           <div>
-            <b>{r.metrics.appearance}</b>
+            <b>{r.metrics?.appearance || 0}</b>
             <span>Quality score</span>
           </div>
           <small>out of 100</small>
@@ -133,39 +108,39 @@ export function ReportDetail() {
           <div className="donut-wrap">
             <QualityDonut metrics={r.metrics} />
             <div className="donut-legend">
-              <Legend tone="lime" label="Grade A" value={r.metrics.gradeA} />
-              <Legend tone="violet" label="Grade B" value={r.metrics.gradeB} />
-              <Legend tone="coral" label="URS" value={r.metrics.urs} />
+              <Legend tone="lime" label="Grade A" value={r.metrics?.gradeA || 0} />
+              <Legend tone="violet" label="Grade B" value={r.metrics?.gradeB || 0} />
+              <Legend tone="coral" label="URS" value={r.metrics?.urs || 0} />
             </div>
           </div>
           <div className="defect-grid">
-            <Defect icon="◌" label="Damaged" value={r.metrics.damaged} />
-            <Defect icon="×" label="Rotten" value={r.metrics.rotten} />
-            <Defect icon="↗" label="Sprouted" value={r.metrics.sprouted} />
-            <Defect icon="↙" label="Undersized" value={r.metrics.undersized} />
+            <Defect icon="◌" label="Damaged" value={r.metrics?.damaged || 0} />
+            <Defect icon="×" label="Rotten" value={r.metrics?.rotten || 0} />
+            <Defect icon="↗" label="Sprouted" value={r.metrics?.sprouted || 0} />
+            <Defect icon="↙" label="Undersized" value={r.metrics?.undersized || 0} />
           </div>
         </section>
 
         <section className="price-card" data-reveal-tier="2">
-          <CardTitle eyebrow="Fair value estimate" title={`${money(r.pricing.fairPrice)} / kg`} />
-          <p className="card-intro">Based on {r.region.market} and the quality of this lot.</p>
+          <CardTitle eyebrow="Fair value estimate" title={`${money(r.pricing?.fairPrice || 0)} / kg`} />
+          <p className="card-intro">Based on {r.region?.market || 'market'} and the quality of this lot.</p>
           <div className="price-lines">
             <span>
               <i>Market reference</i>
-              <b>{money(r.pricing.marketRate)}</b>
+              <b>{money(r.pricing?.marketRate || 0)}</b>
             </span>
             <span>
               <i>Grade A premium</i>
-              <b className="positive">+{money(r.pricing.premium)}</b>
+              <b className="positive">+{money(r.pricing?.premium || 0)}</b>
             </span>
             <span>
               <i>URS adjustment</i>
-              <b className="negative">−{money(r.pricing.penalty)}</b>
+              <b className="negative">−{money(r.pricing?.penalty || 0)}</b>
             </span>
           </div>
           <div className="total-value">
             <span>Expected lot value</span>
-            <b>{money(r.pricing.estimatedValue)}</b>
+            <b>{money(r.pricing?.estimatedValue || 0)}</b>
           </div>
           <p className="value-note">
             <Sparkle size={15} weight="fill" /> A transparent estimate, not a dealer quote.
@@ -177,15 +152,15 @@ export function ReportDetail() {
           <div className="inspection-pairs">
             <span>
               <i>Average bulb size</i>
-              <b>{r.metrics.avgSize} mm</b>
+              <b>{r.metrics?.avgSize || 'Unknown'}</b>
             </span>
             <span>
               <i>Visual appearance</i>
-              <b>{r.metrics.appearance}/100</b>
+              <b>{r.metrics?.appearance || 0}/100</b>
             </span>
             <span>
               <i>AI confidence</i>
-              <b>{r.metrics.confidence}%</b>
+              <b>{r.metrics?.confidence || 0}%</b>
             </span>
             <span>
               <i>Report status</i>
@@ -211,16 +186,16 @@ export function ReportDetail() {
               </span>
             </div>
             <p className="narrative-desc">
-              This batch is predominantly Grade A with a healthy average bulb size of {r.metrics.avgSize} mm. Keep the lot dry and separated from the {r.metrics.rotten}% rotten portion before procurement to protect its value.
+              This batch is predominantly Grade A with a healthy {String(r.metrics?.avgSize || '').toLowerCase()} average bulb size. Keep the lot dry and separated from the {r.metrics?.rotten || 0}% rotten portion before procurement to protect its value.
             </p>
             <div className="narrative-pairs">
               <span>
                 <i>Batch grade</i>
-                <b className="positive">{r.metrics.gradeA >= 70 ? 'Prime Grade A' : 'Commercial'}</b>
+                <b className="positive">{(r.metrics?.gradeA || 0) >= 70 ? 'Prime Grade A' : 'Commercial'}</b>
               </span>
               <span>
                 <i>Culling priority</i>
-                <b>{r.metrics.rotten > 3 ? `Immediate (${r.metrics.rotten}%)` : 'Normal'}</b>
+                <b>{(r.metrics?.rotten || 0) > 3 ? `Immediate (${r.metrics?.rotten}%)` : 'Normal'}</b>
               </span>
             </div>
           </div>
@@ -270,9 +245,14 @@ function Defect({ icon, label, value }: { icon: string; label: string; value: nu
 }
 
 function QualityDonut({ metrics }: { metrics: LotAssessment['metrics'] }) {
-  const a = metrics.gradeA * 3.6
-  const b = metrics.gradeB * 3.6
-  const c = metrics.urs * 3.6
+  const m = metrics || {} as any
+  const gradeA = m.gradeA || 0
+  const gradeB = m.gradeB || 0
+  const urs = m.urs || 0
+
+  const a = gradeA * 3.6
+  const b = gradeB * 3.6
+  const c = urs * 3.6
   return (
     <div
       className="donut"
@@ -281,7 +261,7 @@ function QualityDonut({ metrics }: { metrics: LotAssessment['metrics'] }) {
       }}
     >
       <div>
-        <b>{metrics.gradeA}%</b>
+        <b>{gradeA}%</b>
         <span>Grade A</span>
       </div>
     </div>
@@ -343,10 +323,24 @@ function ScannedImagesSection({ report }: { report: LotAssessment }) {
       <div className="scanned-images-grid">
         {Array.from({ length: report.imageCount }).map((_, i) => (
           <div key={i} className="scanned-image-item">
-            <div className="scanned-image-placeholder">
-              <Camera size={28} weight="duotone" />
-            </div>
-            <span>Sample {String(i + 1).padStart(2, '0')}</span>
+            {report.images && report.images[i] ? (
+              <div style={{ position: 'relative', width: '100%', aspectRatio: '1', borderRadius: '14px', overflow: 'hidden' }}>
+                <img
+                  src={report.images[i]}
+                  alt={`Sample ${i+1}`}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="scanned-image-placeholder">
+                <Camera size={28} weight="duotone" />
+              </div>
+            )}
+            <span style={{ textAlign: 'center' }}>Sample {String(i + 1).padStart(2, '0')}</span>
           </div>
         ))}
       </div>
@@ -355,9 +349,11 @@ function ScannedImagesSection({ report }: { report: LotAssessment }) {
 }
 
 function AiAdvisorySection({ report }: { report: LotAssessment }) {
-  const { gradeA, gradeB, urs, rotten, sprouted, damaged, undersized } = report.metrics
-  const fairPrice = report.pricing.fairPrice
-  const marketRate = report.pricing.marketRate
+  const metrics = report.metrics || {} as any
+  const pricing = report.pricing || {} as any
+  const { gradeA = 0, gradeB = 0, urs = 0, rotten = 0, sprouted = 0, damaged = 0, undersized = 0 } = metrics
+  const fairPrice = pricing.fairPrice || 0
+  const marketRate = pricing.marketRate || 0
 
   // Sell Strategy (Personalized to quality & prices)
   const sell = useMemo(() => {

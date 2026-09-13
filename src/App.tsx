@@ -28,6 +28,8 @@ import { FloatingOrb } from './components/FloatingOrb'
 function App() {
   const profile = useStore(state => state.profile)
   const toast = useStore(state => state.toast)
+  const location = useLocation()
+  const isLanding = location.pathname === '/'
 
   return (
     <>
@@ -38,6 +40,7 @@ function App() {
         <Route path="/dealer/:code?" element={<DealerVerify />} />
         <Route path="/*" element={<AppShell />} />
       </Routes>
+      {!isLanding && <FloatingOrb />}
       {toast && (
         <div className={`toast ${toast.kind === 'plain' ? 'toast-plain' : ''}`}>
           <Check size={17} weight="bold" />{toast.message}
@@ -174,7 +177,6 @@ function AppShell() {
           </NavLink>
         ))}
       </nav>
-      <FloatingOrb />
     </div>
   )
 }

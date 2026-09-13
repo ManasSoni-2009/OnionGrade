@@ -108,8 +108,12 @@ export function useCounter(targetValue: number, duration = 1.2) {
 export const money = (value: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value)
 
-export const formatDate = (value: string) =>
-  new Date(value).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+export const formatDate = (value: string | undefined) => {
+  if (!value) return 'Unknown date'
+  const d = new Date(value)
+  if (isNaN(d.getTime())) return 'Invalid date'
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+}
 
 /* ------------------------------------------------------------------ */
 /*  Auto-Hiding / Auto-Appearing Header Hook                          */

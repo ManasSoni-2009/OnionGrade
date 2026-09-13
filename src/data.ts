@@ -13,8 +13,12 @@ export const makeMetrics = (seed: number): QualityMetrics => {
   const damaged = 4 + (seed % 3)
   const rotten = 2 + (seed % 2)
   const sprouted = 1 + (seed % 2)
-  return { gradeA, gradeB: 100 - gradeA - urs, urs, damaged, rotten, sprouted, undersized: Math.max(2, urs - damaged + 1), avgSize: 48 + (seed % 8), appearance: 86 + (seed % 9), confidence: 92 + (seed % 6) }
+  const sizes = ['Small', 'Medium', 'Large']
+  const avgSize = sizes[seed % 3]
+  return { gradeA, gradeB: 100 - gradeA - urs, urs, damaged, rotten, sprouted, undersized: Math.max(2, urs - damaged + 1), avgSize, appearance: 86 + (seed % 9), confidence: 92 + (seed % 6) }
 }
+
+let assessmentCounter = 0
 
 export const createAssessment = (weight: number, variety: string, region: MarketRegion, imageCount: number, seed = imageCount * 11): LotAssessment => {
   const metrics = makeMetrics(seed)
@@ -22,9 +26,10 @@ export const createAssessment = (weight: number, variety: string, region: Market
   const penalty = Math.round(metrics.urs * 0.12 * 10) / 10
   const fairPrice = Math.round((region.rate + premium - penalty) * 10) / 10
   const stamp = new Date()
+  const uid = `${++assessmentCounter}-${Math.random().toString(36).substring(2, 6)}`
   return {
-    id: `LOT-${stamp.getTime()}-${seed}`,
-    code: `OG-${stamp.getFullYear()}-${String(seed * 83).padStart(5, '0')}`,
+    id: `LOT-${stamp.getTime()}-${seed}-${uid}`,
+    code: `OG-${stamp.getFullYear()}-${String((seed * 83 + 100) % 99999).padStart(5, '0')}`,
     variety, weight, region, capturedAt: stamp.toISOString(), location: 'Farm assessment · GPS simulated', imageCount,
     status: 'verified', metrics,
     pricing: { marketRate: region.rate, fairPrice, estimatedValue: Math.round(fairPrice * weight), premium, penalty },
@@ -32,7 +37,7 @@ export const createAssessment = (weight: number, variety: string, region: Market
 }
 
 export const seededReports = (): LotAssessment[] => [
-  createAssessment(1250, 'Nashik Red', regions[0], 8, 19),
-  createAssessment(680, 'Agrifound Dark Red', regions[1], 7, 12),
-  createAssessment(940, 'Nashik Red', regions[0], 9, 25),
+  { ...createAssessment(1250, 'Nashik Red', regions[0], 8, 19), id: 'LOT-SEED-19', code: 'OG-2025-01577' },
+  { ...createAssessment(680, 'Agrifound Dark Red', regions[1], 7, 12), id: 'LOT-SEED-12', code: 'OG-2025-00996' },
+  { ...createAssessment(940, 'Nashik Red', regions[0], 9, 25), id: 'LOT-SEED-25', code: 'OG-2025-02075' },
 ]

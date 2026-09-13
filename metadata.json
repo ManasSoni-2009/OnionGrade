@@ -1,0 +1,11 @@
+{
+  "name": "OnionGrade",
+  "description": "Transparent onion quality assessment and grading system for farmers and dealers",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
